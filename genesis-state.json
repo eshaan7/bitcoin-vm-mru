@@ -1,0 +1,31 @@
+{
+  "state": {
+    "admins": ["0x94bE2330e995A6A1ef2b563E801Ec04AA9DE03DE"],
+    "utxos": {
+      "0000000000000000000000000000000000000000000000000000000000000000": [
+        {
+          "txId": "0000000000000000000000000000000000000000000000000000000000000000",
+          "outputIndex": 0,
+          "address": "16F9jqVwZFymJ31YGeiDNewhWxf7K23Bz8",
+          "script": "76a9143985bf38eba8fce70253daa26687d8558f1a84ce88ac",
+          "satoshis": 1000
+        },
+        {
+          "txId": "0000000000000000000000000000000000000000000000000000000000000000",
+          "outputIndex": 1,
+          "address": "1Ex5VxTStwoyEoxhFf99KJQE2u8YimsvPz",
+          "script": "76a914990444d478c34baffa38caa64ba7fac9fb855ae888ac",
+          "satoshis": 100
+        },
+        {
+          "txId": "0000000000000000000000000000000000000000000000000000000000000000",
+          "outputIndex": 2,
+          "address": "3PRpYCxYKGLyc6eMSyvRkA3JTHsbBVMuAo",
+          "script": "a914ee730624d3450aeb592e6e9de37b7c2f00cbf35687",
+          "satoshis": 200
+        }
+      ]
+    },
+    "transactions": []
+  }
+}

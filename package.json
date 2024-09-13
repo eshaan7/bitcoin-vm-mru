@@ -1,0 +1,31 @@
+{
+  "name": "bitcoin-vm-mru",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@stackr/sdk": "file:../sdk",
+    "bitcore-lib": "^10.3.0",
+    "ethers": "^6.7.1",
+    "express": "^4.18.2",
+    "inquirer": "^9.2.17",
+    "merkletreejs": "^0.3.11",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@stackr/eslint-plugin": "^0.1.1",
+    "@types/bitcore-lib": "^0.15.6",
+    "@types/express": "^4.17.19",
+    "@typescript-eslint/eslint-plugin": "^8.4.0",
+    "@typescript-eslint/parser": "^8.4.0",
+    "bun-types": "latest",
+    "eslint": "^9.10.0",
+    "rimraf": "^6.0.1",
+    "typescript-eslint": "^8.4.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
