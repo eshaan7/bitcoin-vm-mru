@@ -1,9 +1,9 @@
+import { ActionParams, MicroRollupResponse } from "@stackr/sdk";
+import { AllowedInputTypes } from "@stackr/sdk/machine";
 import { Bridge } from "@stackr/sdk/plugins";
-import { AbiCoder, Wallet } from "ethers";
 import * as bitcore from "bitcore-lib";
+import { AbiCoder, Wallet } from "ethers";
 
-import { MintSatsSchema } from "./actions";
-import { AllowedInputTypes, MicroRollupResponse } from "@stackr/sdk";
 import { MintSatsInputs } from "./types";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
@@ -22,6 +22,7 @@ export function initBridge(mru: MicroRollupResponse) {
           `[BRIDGE_WBTC ticket: #${args.ticketNumber}] Received ${amount} WBTC from ${args.submitter} to mint ${satoshis} sats to ${btcAddress}.`
         );
 
+        const name = "mintSats";
         const inputs: MintSatsInputs = {
           ethAddress: args.submitter,
           btcAddress,
@@ -29,19 +30,19 @@ export function initBridge(mru: MicroRollupResponse) {
           timestamp: Date.now(),
         };
         const signature = await operator.signTypedData(
-          MintSatsSchema.domain,
-          MintSatsSchema.EIP712TypedData.types,
-          inputs
+          mru.config.domain,
+          mru.getStfSchemaMap()[name],
+          { name, inputs }
         );
-        const action = MintSatsSchema.actionFrom({
+        const actionParams: ActionParams = {
+          name,
           inputs: inputs as unknown as AllowedInputTypes,
           signature,
           msgSender: operator.address,
-        });
+        };
 
         return {
-          transitionName: "mintSats",
-          action,
+          actionParams,
         };
       },
     },

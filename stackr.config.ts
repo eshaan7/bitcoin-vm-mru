@@ -7,8 +7,8 @@ const stackrConfig: StackrConfig = {
   isSandbox: true,
   sequencer: {
     blockSize: 1,
-    blockTime: 1000,
-    allowEmptyBlocks: true,
+    blockTime: 100,
+    allowEmptyBlocks: false,
   },
   syncer: {
     slotTime: 1000,
@@ -27,7 +27,7 @@ const stackrConfig: StackrConfig = {
     ],
   },
   domain: {
-    name: "Stackr MVP v0",
+    name: "Bitcoin-VM MRU",
     version: "1",
     salt: "0x0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   },

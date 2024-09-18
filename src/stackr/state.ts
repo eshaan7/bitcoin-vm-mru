@@ -14,25 +14,13 @@ export class BitcoinVMState extends State<BitcoinVMStateType> {
       solidityPackedKeccak256(["string"], [admin])
     );
     const adminsRoot = new MerkleTree(adminHashes).getHexRoot();
-    const utxos = Object.values(this.state.utxos).flatMap((utxos) => utxos);
-    const utxoHashes = utxos.map((utxo) =>
-      solidityPackedKeccak256(
-        ["string", "uint256", "string", "string", "uint256"],
-        [
-          utxo.txId,
-          utxo.outputIndex,
-          utxo.address, // bitcoin address so using string
-          utxo.script,
-          utxo.satoshis,
-        ]
-      )
-    );
-    const utxosRoot = new MerkleTree(utxoHashes).getHexRoot();
-    const txHashes = this.state.transactions.map((tx) =>
-      solidityPackedKeccak256(["string"], [tx])
+    // we don't need to include utxos seperately since they are included in the tx hex
+    const txHashes = Object.entries(this.state.transactions).map(
+      ([txId, txHex]) =>
+        solidityPackedKeccak256(["string", "string"], [txId, txHex])
     );
     const txsRoot = new MerkleTree(txHashes).getHexRoot();
-    const finalTree = new MerkleTree([adminsRoot, utxosRoot, txsRoot]);
+    const finalTree = new MerkleTree([adminsRoot, txsRoot]);
     return finalTree.getHexRoot();
   }
 }

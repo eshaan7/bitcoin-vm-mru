@@ -1,14 +1,17 @@
-import { ActionConfirmationStatus, AllowedInputTypes } from "@stackr/sdk";
+import { ActionConfirmationStatus, ActionParams } from "@stackr/sdk";
+import { AllowedInputTypes } from "@stackr/sdk/machine";
 import * as bitcore from "bitcore-lib";
 import { Wallet } from "ethers";
 import inquirer from "inquirer";
 
 import { createP2PKHTx, createP2PSHTx } from "./bitcore-utils";
 import { CLIAction, CLITransferSatsResponse } from "./cli-types";
-import { MintSatsSchema, RunTxSchema } from "./stackr/actions";
 import { btcStateMachine } from "./stackr/machine";
 import { mru } from "./stackr/mru";
 import { MintSatsInputs, RunTxInputs, UTXO } from "./stackr/types";
+
+bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
+bitcore.Transaction.DUST_AMOUNT = 0;
 
 const sm = mru.stateMachines.getFirst<
   typeof btcStateMachine
@@ -39,6 +42,7 @@ const findSufficientUtxos = (btcAddress: string, sats: number): UTXO[] => {
 
 const actions = {
   mintSats: async (btcAddress: string, satoshis: number): Promise<void> => {
+    const name = "mintSats";
     const inputs: MintSatsInputs = {
       ethAddress: selectedWallet.address,
       btcAddress,
@@ -46,16 +50,17 @@ const actions = {
       timestamp: Date.now(),
     };
     const signature = await operator.signTypedData(
-      MintSatsSchema.domain,
-      MintSatsSchema.EIP712TypedData.types,
-      inputs
+      mru.config.domain,
+      mru.getStfSchemaMap()[name],
+      { name, inputs }
     );
-    const actionToSend = MintSatsSchema.actionFrom({
+    const actionParams: ActionParams = {
+      name,
       inputs: inputs as unknown as AllowedInputTypes,
       signature,
       msgSender: operator.address,
-    });
-    const ack = await mru.submitAction("mintSats", actionToSend);
+    };
+    const ack = await mru.submitAction(actionParams);
     const action = await ack.waitFor(ActionConfirmationStatus.C1);
     console.log("\n----------[output]----------");
     console.log("Action has been submitted.");
@@ -67,7 +72,9 @@ const actions = {
     const btcPrivateKey = new bitcore.PrivateKey(
       selectedWallet.privateKey.replace("0x", "")
     );
-    const btcAddress = btcPrivateKey.toAddress().toString();
+    const btcAddress = btcPrivateKey
+      .toAddress(undefined, bitcore.Address.PayToTaproot)
+      .toString();
     const sufficientUtxos = findSufficientUtxos(btcAddress, sats);
     if (sufficientUtxos.reduce((acc, u) => acc + u.satoshis, 0) < sats) {
       console.log("\n----------[output]----------");
@@ -83,6 +90,7 @@ const actions = {
       signers: [btcPrivateKey],
     });
     // tx.lockUntilBlockHeight(10);
+    const name = "runTx";
     const inputs: RunTxInputs = {
       serializedTx: tx.serialize({
         disableSmallFees: true,
@@ -90,16 +98,17 @@ const actions = {
       }),
     };
     const signature = await operator.signTypedData(
-      RunTxSchema.domain,
-      RunTxSchema.EIP712TypedData.types,
-      inputs
+      mru.config.domain,
+      mru.getStfSchemaMap()[name],
+      { name, inputs }
     );
-    const actionToSend = RunTxSchema.actionFrom({
+    const actionParams: ActionParams = {
+      name,
       inputs: inputs as unknown as AllowedInputTypes,
       signature,
       msgSender: operator.address,
-    });
-    const ack = await mru.submitAction("runTx", actionToSend);
+    };
+    const ack = await mru.submitAction(actionParams);
     const action = await ack.waitFor(ActionConfirmationStatus.C1);
     console.log("\n----------[output]----------");
     console.log("Action has been submitted.");
@@ -130,6 +139,7 @@ const actions = {
       changeAddress: p2shAddress.toString(),
       signers: btcPrivKeys.slice(0, threshold),
     });
+    const name = "runTx";
     const inputs: RunTxInputs = {
       serializedTx: tx.serialize({
         disableSmallFees: true,
@@ -137,16 +147,17 @@ const actions = {
       }),
     };
     const signature = await operator.signTypedData(
-      RunTxSchema.domain,
-      RunTxSchema.EIP712TypedData.types,
-      inputs
+      mru.config.domain,
+      mru.getStfSchemaMap()[name],
+      { name, inputs }
     );
-    const actionToSend = RunTxSchema.actionFrom({
+    const actionParams: ActionParams = {
+      name,
       inputs: inputs as unknown as AllowedInputTypes,
       signature,
       msgSender: operator.address,
-    });
-    const ack = await mru.submitAction("runTx", actionToSend);
+    };
+    const ack = await mru.submitAction(actionParams);
     const action = await ack.waitFor(ActionConfirmationStatus.C1);
     console.log("\n----------[output]----------");
     console.log("Action has been submitted.");
@@ -160,7 +171,7 @@ const actions = {
         const btcAddress = new bitcore.PrivateKey(
           wallet.privateKey.replace("0x", "")
         )
-          .toAddress()
+          .toAddress(undefined, bitcore.Address.PayToTaproot)
           .toString();
         acc[btcAddress] = label;
         return acc;
@@ -169,25 +180,19 @@ const actions = {
     );
     const balances = Object.values(sm.state.utxos)
       .flatMap((utxos) => utxos)
-      .reduce(
-        (acc, utxo) => {
-          if (!acc[utxo.address]) {
-            acc[utxo.address] = {
-              label: ethBtcAddressLabelMap[utxo.address] || "-",
-              address: utxo.address,
-              sats: 0,
-              utxoCount: 0,
-            };
-          }
-          acc[utxo.address].sats += utxo.satoshis;
-          acc[utxo.address].utxoCount += 1;
-          return acc;
-        },
-        {} as Record<
-          string,
-          { label: string; address: string; sats: number; utxoCount: number }
-        >
-      );
+      .reduce((acc, utxo) => {
+        if (!acc[utxo.address]) {
+          acc[utxo.address] = {
+            label: ethBtcAddressLabelMap[utxo.address] || "-",
+            address: utxo.address,
+            sats: 0,
+            utxoCount: 0,
+          };
+        }
+        acc[utxo.address].sats += utxo.satoshis;
+        acc[utxo.address].utxoCount += 1;
+        return acc;
+      }, {} as Record<string, { label: string; address: string; sats: number; utxoCount: number }>);
     console.log("\n----------[output]----------");
     console.log("Balances:");
     console.table(Object.values(balances));

@@ -5,3 +5,6 @@ bun.lockb
 stackr_build/
 .env
 dist/
+bun.lockb
+package-lock.json
+sandbox*

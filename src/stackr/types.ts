@@ -8,8 +8,9 @@ export interface UTXO {
 
 export interface BitcoinVMStateType {
   admins: string[]; // Ethereum addresses of rollup operator/admins
+  // TODO: utxos can be retrieved from transactions so don't keep in raw state (implement transformer)
   utxos: Record<string, UTXO[]>; // Transaction ID -> UTXOs
-  transactions: string[]; // tx IDs (bitcore#Transaction#id)
+  transactions: Record<string, string>; // (bitcore#Transaction#id) -> (bitcore#Transaction#serialize)
 }
 
 export interface MintSatsInputs {
@@ -20,5 +21,5 @@ export interface MintSatsInputs {
 }
 
 export interface RunTxInputs {
-  serializedTx: string
+  serializedTx: string;
 }

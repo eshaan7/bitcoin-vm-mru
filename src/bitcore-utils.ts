@@ -2,6 +2,9 @@ import * as bitcore from "bitcore-lib";
 
 import { UTXO } from "./stackr/types";
 
+bitcore.Networks.defaultNetwork = bitcore.Networks.testnet;
+bitcore.Transaction.DUST_AMOUNT = 0;
+
 export const convertLockTimeToTimestamp = (
   nLockTime: null | number | Date
 ): number => {
@@ -29,12 +32,12 @@ export const checkTxCLTV = (
   return currentTimestamp >= nLockTime; // Check timestamp-based locktime
 };
 
-export const createP2PKHUtxo = (values: {
+export const createUtxo = (values: {
   address: bitcore.Address;
   satoshis: number;
 }): UTXO => {
   const { address, satoshis } = values;
-  const script = bitcore.Script.buildPublicKeyHashOut(address);
+  const script = new bitcore.Script(address);
   const utxo: UTXO = {
     txId: "0000000000000000000000000000000000000000000000000000000000000000",
     outputIndex: 0,
@@ -56,7 +59,6 @@ export const createP2PKHTx = (values: {
   const utxoObjects = utxos.map((utxo) =>
     bitcore.Transaction.UnspentOutput.fromObject(utxo)
   );
-  bitcore.Transaction.DUST_AMOUNT = 0;
   const tx = new bitcore.Transaction()
     .fee(0)
     .from(utxoObjects)
@@ -64,22 +66,6 @@ export const createP2PKHTx = (values: {
     .change(changeAddress)
     .sign(signers);
   return tx;
-};
-
-export const createP2PSHUtxo = (values: {
-  address: bitcore.Address; // P2SH address
-  satoshis: number;
-}): UTXO => {
-  const { address, satoshis } = values;
-  const script = new bitcore.Script(address);
-  const utxo: UTXO = {
-    txId: "0000000000000000000000000000000000000000000000000000000000000000",
-    outputIndex: 0,
-    address: address.toString(),
-    script: script.toHex(),
-    satoshis,
-  };
-  return utxo;
 };
 
 export const createP2PSHTx = (values: {
